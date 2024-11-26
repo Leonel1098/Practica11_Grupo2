@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Reservas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Mis Reservas</h1>
+    </header>
+
+    <main>
+        <div class="container" id="reservations-list"></div>
+    </main>
+
+    <script>
+        window.onload = function() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                alert('Debes estar logueado');
+                window.location.href = '/login';
+                return;
+            }
+
+            fetch('/api/reservations', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const reservationsList = document.getElementById('reservations-list');
+                data.forEach(reservation => {
+                    const reservationCard = document.createElement('div');
+                    reservationCard.classList.add('card');
+                    reservationCard.innerHTML = `
+                        <h3>${reservation.room_name}</h3>
+                        <p>Fecha: ${new Date(reservation.date).toLocaleString()}</p>
+                    `;
+                    reservationsList.appendChild(reservationCard);
+                });
+            })
+            .catch(error => {
+                alert('Error al cargar las reservas');
+            });
+        };
+    </script>
+</body>
+</html>
