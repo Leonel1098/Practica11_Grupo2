@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Reservaciones</title>
+</head>
+<body>
+    <h1>Reservaciones</h1>
+    {% if session_user_role == 'admin' %}
+        <h3>Reservaciones de todos los usuarios</h3>
+    {% else %}
+        <h3>Mis Reservaciones</h3>
+    {% endif %}
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre Cliente</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                {% if session_user_role == 'admin' %}
+                    <th>Acciones</th>
+                {% else %}
+                    <th>Acción</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+                <tr>
+                    <td>{{ reservation.nombre_cliente }}</td>
+                    <td>{{ reservation.fecha_reserva }}</td>
+                    <td>{{ reservation.hora_reserva }}</td>
+                    {% if session_user_role == 'admin' %}
+                        <td>
+                            <a href="{{ url_for('reservations.edit_reservation', reservation_id=reservation.id) }}">Editar</a>
+                            <form action="{{ url_for('reservations.delete_reservation', reservation_id=reservation.id) }}" method="POST" style="display:inline;">
+                                <button type="submit">Eliminar</button>
+                            </form>
+                        </td>
+                    {% else %}
+                        <td>
+                            <a href="{{ url_for('reservations.edit_reservation', reservation_id=reservation.id) }}">Editar</a>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('reservations.create_reservation') }}">Crear Nueva Reservación</a>
+</body>
+</html>

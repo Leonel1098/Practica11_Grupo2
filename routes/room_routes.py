@@ -1,72 +1,64 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from models.room import Room, db
-from models.user import User
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from middleware import admin_required, login_required
+from models.room import Room
+from models import db
 
-bp = Blueprint('rooms', __name__)
+rooms_routes = Blueprint('rooms', __name__)
 
-# Ruta para listar todas las salas disponibles
-@bp.route('/', methods=['GET'])
-def get_rooms():
+@rooms_routes.route('/rooms', methods=['GET'])
+@login_required
+def list_rooms():
+    """Ruta para listar salas disponibles."""
     rooms = Room.query.filter_by(availability=True).all()
-    return jsonify([{'id': room.id, 'name': room.name, 'capacity': room.capacity, 'location': room.location} for room in rooms]), 200
+    return render_template('list_rooms.html', rooms=rooms)
 
-# Ruta para agregar una nueva sala (Solo admin)
-@bp.route('/', methods=['POST'])
-@jwt_required()
-def add_room():
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    if user.role != 'admin':
-        return jsonify({"msg": "Permission denied"}), 403
-    
-    data = request.get_json()
-    name = data.get('name')
-    capacity = data.get('capacity')
-    location = data.get('location')
 
-    if not name or not capacity or not location:
-        return jsonify({"msg": "Missing required fields"}), 400
+@rooms_routes.route('/admin/rooms', methods=['GET', 'POST'])
+@admin_required
+def manage_rooms():
+    """Ruta para que el administrador gestione las salas."""
+    if request.method == 'POST':
+        name = request.form['name']
+        capacity = request.form['capacity']
+        location = request.form['location']
+        availability = request.form.get('availability') == 'on'
 
-    new_room = Room(name=name, capacity=capacity, location=location, availability=True)
-    db.session.add(new_room)
-    db.session.commit()
+        new_room = Room(name=name, capacity=capacity, location=location, availability=availability)
+        db.session.add(new_room)
+        db.session.commit()
+        flash('Sala creada exitosamente.', 'success')
 
-    return jsonify({"msg": "Room added successfully"}), 201
+    rooms = Room.query.all()
+    return render_template('admin_manage.html', rooms=rooms)
 
-# Ruta para editar una sala (Solo admin)
-@bp.route('/<int:room_id>', methods=['PUT'])
-@jwt_required()
-def update_room(room_id):
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    if user.role != 'admin':
-        return jsonify({"msg": "Permission denied"}), 403
-    
-    room = Room.query.get_or_404(room_id)
-    data = request.get_json()
 
-    room.name = data.get('name', room.name)
-    room.capacity = data.get('capacity', room.capacity)
-    room.location = data.get('location', room.location)
-
-    db.session.commit()
-    return jsonify({"msg": "Room updated successfully"}), 200
-
-# Ruta para eliminar una sala (Solo admin)
-@bp.route('/<int:room_id>', methods=['DELETE'])
-@jwt_required()
+@rooms_routes.route('/admin/rooms/delete/<int:room_id>', methods=['POST'])
+@admin_required
 def delete_room(room_id):
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    
-    if user.role != 'admin':
-        return jsonify({"msg": "Permission denied"}), 403
+    """Ruta para que el administrador elimine una sala."""
+    room = Room.query.get(room_id)
+    if room:
+        db.session.delete(room)
+        db.session.commit()
+        flash('Sala eliminada exitosamente.', 'success')
+    else:
+        flash('La sala no existe.', 'danger')
+    return redirect(url_for('rooms.manage_rooms'))
 
-    room = Room.query.get_or_404(room_id)
-    db.session.delete(room)
-    db.session.commit()
+@rooms_routes.route('/admin/rooms/update/<int:room_id>', methods=['GET', 'POST'])
+@admin_required
+def update_room(room_id):
+    """Ruta para que el administrador modifique una sala."""
+    room = Room.query.get_or_404(room_id)  # Obtén la sala, si no existe muestra un error 404
 
-    return jsonify({"msg": "Room deleted successfully"}), 200
+    if request.method == 'POST':
+        room.name = request.form['name']
+        room.capacity = request.form['capacity']
+        room.location = request.form['location']
+        room.availability = request.form.get('availability') == 'on'
+
+        db.session.commit()  # Guarda los cambios en la base de datos
+        flash('Sala actualizada exitosamente.', 'success')
+        return redirect(url_for('rooms.manage_rooms'))  # Redirige a la vista de gestión de salas
+
+    return render_template('modificar_sala.html', room=room)  # Muestra el formulario de actualización

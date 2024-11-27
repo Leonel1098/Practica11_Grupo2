@@ -2,10 +2,10 @@ from . import db
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100))
+    name = db.Column(db.String(100))
     email = db.Column(db.String(100), unique=True)
-    contrasena = db.Column(db.String(100))
-    rol = db.Column(db.Enum('user', 'admin', name='roles'), default='user')
+    password = db.Column(db.String(100))
+    role = db.Column(db.Enum('user', 'admin', name='roles'), default='user')
 
     reservations = db.relationship('Reservation', back_populates='user')
 

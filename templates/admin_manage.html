@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Salas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Administrar Salas</h1>
+
+        <!-- Botones de acción global -->
+        <div class="mb-4">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Cerrar sesión</a>
+            <a href="{{ url_for('reservations.list_reservations') }}" class="btn btn-primary ms-2">Ir al Formulario de Reservaciones</a>
+        </div>
+
+        <div class="mb-4">
+            <h3>Agregar Nueva Sala</h3>
+            <form method="POST" action="{{ url_for('rooms.manage_rooms') }}">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="name" class="form-label">Nombre de la Sala</label>
+                        <input type="text" id="name" name="name" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="capacity" class="form-label">Capacidad</label>
+                        <input type="number" id="capacity" name="capacity" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="location" class="form-label">Ubicación</label>
+                        <input type="text" id="location" name="location" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="availability" name="availability">
+                    <label class="form-check-label" for="availability">¿Disponible?</label>
+                </div>
+                <button type="submit" class="btn btn-success mt-3">Agregar Sala</button>
+            </form>
+        </div>
+
+        <hr>
+
+        <h3>Salas Actuales</h3>
+        {% if rooms %}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Capacidad</th>
+                        <th>Ubicación</th>
+                        <th>Disponible</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in rooms %}
+                        <tr>
+                            <td>{{ room.id }}</td>
+                            <td>{{ room.name }}</td>
+                            <td>{{ room.capacity }}</td>
+                            <td>{{ room.location }}</td>
+                            <td>{{ 'Sí' if room.availability else 'No' }}</td>
+                            <td>
+                                <!-- Formulario para eliminar -->
+                                <form method="POST" action="{{ url_for('rooms.delete_room', room_id=room.id) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                </form>
+
+                                <!-- Enlace para modificar -->
+                                <a href="{{ url_for('rooms.update_room', room_id=room.id) }}" class="btn btn-warning btn-sm ms-2">Modificar</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="alert alert-info text-center">
+                No hay salas registradas.
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

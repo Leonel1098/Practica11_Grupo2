@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modificar Sala</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Modificar Sala: {{ room.name }}</h1>
+        <form action="{{ url_for('rooms.update_room', room_id=room.id) }}" method="POST">
+            <label for="name">Nombre de la Sala:</label>
+            <input type="text" id="name" name="name" value="{{ room.name }}" required>
+
+            <label for="capacity">Capacidad:</label>
+            <input type="number" id="capacity" name="capacity" value="{{ room.capacity }}" required>
+
+            <label for="location">Ubicación:</label>
+            <input type="text" id="location" name="location" value="{{ room.location }}" required>
+
+            <label for="availability">Disponibilidad:</label>
+            <input type="checkbox" id="availability" name="availability" {% if room.availability %} checked {% endif %}>
+
+            <button type="submit">Actualizar Sala</button>
+        </form>
+        <a href="{{ url_for('rooms.manage_rooms') }}">Volver a la gestión de salas</a>
+    </div>
+</body>
+</html>
